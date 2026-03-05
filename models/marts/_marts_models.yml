@@ -1,0 +1,141 @@
+version: 2
+
+models:
+
+  - name: obt_plc_tags
+    description: >
+      One Big Table (OBT) del sistema PLC. Tabla final desnormalizada que
+      combina variables PLC con su clasificación de zona, acceso HMI, flags
+      de control y coordenadas de dirección lógica. Lista para conectar
+      directamente con Metabase u otras herramientas BI sin necesidad de JOINs.
+      Materializada como TABLE para máxima performance en consultas.
+    columns:
+      - name: tag_name
+        description: Nombre único de la variable PLC (ej. MOTOR, STOP, HMI_INI)
+        tests:
+          - not_null
+          - unique
+
+      - name: logical_address
+        description: Dirección lógica completa en el PLC (ej. %I0.2, %Q0.4)
+        tests:
+          - not_null
+          - unique
+
+      - name: address_prefix
+        description: Prefijo de zona (%I = Entrada, %Q = Salida, %M = Marca)
+        tests:
+          - not_null
+
+      - name: zone_label
+        description: Zona del PLC en texto legible (Entrada / Salida / Marca)
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Entrada', 'Salida', 'Marca', 'Desconocida']
+
+      - name: zone_description
+        description: Descripción del rol de la zona en el sistema de automatización
+
+      - name: address_byte
+        description: Byte de la dirección lógica
+
+      - name: address_bit
+        description: Bit de la dirección lógica
+
+      - name: data_type
+        description: Tipo de dato de la variable (actualmente Bool para todos)
+        tests:
+          - not_null
+
+      - name: is_hmi_visible
+        description: True si la variable es visible en la pantalla HMI
+        tests:
+          - not_null
+
+      - name: is_hmi_accessible
+        description: True si la variable puede ser modificada desde la pantalla HMI
+        tests:
+          - not_null
+
+      - name: hmi_access_label
+        description: Etiqueta combinada del nivel de acceso HMI
+
+      - name: is_control_critical
+        description: True si la variable es crítica para el control del proceso industrial
+        tests:
+          - not_null
+
+      - name: path_description
+        description: Ruta de la tabla de variables en el sistema PLC
+
+      - name: tag_comment
+        description: Comentario descriptivo de la variable (vacío si no tiene)
+
+      - name: extracted_at
+        description: Timestamp de cuando Airbyte extrajo el dato desde el PLC
+
+      - name: transformed_at
+        description: Timestamp de cuando dbt ejecutó la última transformación
+
+  - name: obt_repositories
+    description: >
+      One Big Table (OBT) del portafolio de repositorios GitHub de AirbyteHQ.
+      Incluye clasificación por tipo de proyecto (Connector, Singer Tap,
+      Airbyte Core, etc.), estado de actividad y días desde última actualización.
+      Lista para dashboards de monitoreo del portafolio open source.
+      Materializada como TABLE para máxima performance en consultas.
+    columns:
+      - name: repository_id
+        description: ID numérico único del repositorio en GitHub
+        tests:
+          - not_null
+          - unique
+
+      - name: repository_name
+        description: Nombre del repositorio extraído de la clone_url
+        tests:
+          - not_null
+
+      - name: organization_name
+        description: Nombre de la organización propietaria en GitHub
+        tests:
+          - not_null
+
+      - name: clone_url
+        description: URL HTTPS para clonar el repositorio
+
+      - name: repo_type
+        description: >
+          Clasificación del repositorio según convenciones de nomenclatura Airbyte.
+          Connector, Singer Tap, Singer Target, Airbyte Core, Demo/Example,
+          Workshop, dbt Integration u Other.
+        tests:
+          - not_null
+
+      - name: is_archived
+        description: True si el repositorio está archivado (solo lectura) en GitHub
+        tests:
+          - not_null
+
+      - name: is_active_repo
+        description: True si el repo no está archivado y fue actualizado en el último año
+        tests:
+          - not_null
+
+      - name: activity_status
+        description: Estado de actividad (Activo / Mantenimiento / Inactivo)
+        tests:
+          - not_null
+
+      - name: updated_at
+        description: Fecha de la última actualización del repositorio en GitHub
+
+      - name: days_since_update
+        description: Cantidad de días desde la última actualización
+
+      - name: extracted_at
+        description: Timestamp de cuando Airbyte extrajo el dato desde GitHub
+
+      - name: transformed_at
+        description: Timestamp de cuando dbt ejecutó la última transformación

@@ -1,0 +1,131 @@
+version: 2
+
+models:
+
+  - name: int_plc_tags_enriched
+    description: >
+      Variables PLC enriquecidas con clasificaciones de negocio derivadas
+      de la dirección lógica. Añade zona del PLC (Entrada/Salida/Marca),
+      coordenadas de dirección (byte y bit), flag de control crítico y
+      etiqueta de acceso HMI. Este modelo es la base para el mart OBT.
+    columns:
+      - name: tag_name
+        description: Nombre único de la variable PLC
+        tests:
+          - not_null
+          - unique
+
+      - name: zone_label
+        description: >
+          Zona del PLC derivada del prefijo de la dirección lógica.
+          Entrada = señales desde sensores/botones (%I),
+          Salida = señales hacia actuadores/indicadores (%Q),
+          Marca = variables internas de memoria (%M).
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Entrada', 'Salida', 'Marca', 'Desconocida']
+
+      - name: zone_description
+        description: Descripción extendida del rol de la zona en el sistema PLC
+
+      - name: address_byte
+        description: Número de byte de la dirección lógica (ej. %Q0.4 → 0)
+
+      - name: address_bit
+        description: Número de bit de la dirección lógica (ej. %Q0.4 → 4)
+
+      - name: is_control_critical
+        description: >
+          True si la variable es considerada crítica para el control del proceso.
+          Variables críticas: MOTOR, INICIO, STOP, AUXINICIO.
+        tests:
+          - not_null
+
+      - name: hmi_access_label
+        description: >
+          Etiqueta descriptiva del nivel de acceso HMI combinando
+          is_hmi_visible e is_hmi_accessible.
+
+      - name: data_type
+        description: Tipo de dato de la variable
+
+      - name: logical_address
+        description: Dirección lógica completa del tag en el PLC
+
+      - name: is_hmi_visible
+        description: Boolean — variable visible en pantalla HMI
+
+      - name: is_hmi_accessible
+        description: Boolean — variable accesible para escritura desde HMI
+
+      - name: extracted_at
+        description: Timestamp de extracción original por Airbyte
+
+  - name: int_repositories_classified
+    description: >
+      Repositorios de GitHub clasificados por tipo de proyecto y estado de
+      actividad. Añade días desde última actualización y flag de repositorio
+      activo. Usa convenciones de nomenclatura del ecosistema Airbyte para
+      clasificar: connector-, tap-, target-, airbyte-, etc.
+    columns:
+      - name: repository_id
+        description: ID único del repositorio en GitHub
+        tests:
+          - not_null
+          - unique
+
+      - name: repository_name
+        description: Nombre del repositorio
+
+      - name: organization_name
+        description: Nombre de la organización en GitHub
+
+      - name: repo_type
+        description: >
+          Tipo de repositorio según convenciones de nomenclatura Airbyte.
+          Valores: Connector, Singer Tap, Singer Target, Airbyte Core,
+          Demo / Example, Workshop, dbt Integration, Other.
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - 'Connector'
+                - 'Singer Tap'
+                - 'Singer Target'
+                - 'Airbyte Core'
+                - 'Demo / Example'
+                - 'Workshop'
+                - 'dbt Integration'
+                - 'Other'
+
+      - name: activity_status
+        description: >
+          Estado de actividad basado en updated_at.
+          Activo = actualizado en últimos 90 días,
+          Mantenimiento = entre 90 y 365 días,
+          Inactivo = más de 365 días sin actualización.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Activo', 'Mantenimiento', 'Inactivo']
+
+      - name: days_since_update
+        description: Días transcurridos desde la última actualización del repo
+
+      - name: is_active_repo
+        description: True si el repo no está archivado y fue actualizado en el último año
+        tests:
+          - not_null
+
+      - name: is_archived
+        description: Boolean — true si el repositorio está archivado en GitHub
+
+      - name: clone_url
+        description: URL completa para clonar el repositorio
+
+      - name: updated_at
+        description: Timestamp de la última actualización
+
+      - name: extracted_at
+        description: Timestamp de extracción por Airbyte

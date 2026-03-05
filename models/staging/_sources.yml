@@ -1,0 +1,68 @@
+version: 2
+
+sources:
+  - name: airbyte_raw
+    description: >
+      Datos crudos ingestados desde Airbyte hacia MotherDuck.
+      Base de datos: airbyte_curso, schema: main.
+    database: airbyte_curso
+    schema: main
+    loader: airbyte
+    loaded_at_field: _airbyte_extracted_at
+
+    tables:
+      - name: plc_tags
+        description: >
+          Variables de un controlador lógico programable (PLC) exportadas
+          desde un sistema SCADA. Contiene nombres, tipos de dato,
+          direcciones lógicas y configuración de visibilidad HMI.
+        columns:
+          - name: name
+            description: Nombre de la variable PLC (ej. MOTOR, STOP, V1)
+          - name: path
+            description: Ruta o tabla de variables donde está definida
+          - name: comment
+            description: Comentario descriptivo (actualmente NULL en todos los registros)
+          - name: data_type
+            description: Tipo de dato de la variable (Bool, Int, Real, etc.)
+          - name: hmi_visible
+            description: Indica si la variable es visible en pantalla HMI
+          - name: hmi_accessible
+            description: Indica si la variable es accesible/escribible desde HMI
+          - name: logical_address
+            description: Dirección lógica en el PLC (%I=entrada, %Q=salida, %M=marca)
+          - name: _airbyte_raw_id
+            description: ID interno de trazabilidad de Airbyte
+          - name: _airbyte_extracted_at
+            description: Timestamp de cuando Airbyte extrajo el registro
+          - name: _airbyte_meta
+            description: Metadatos internos de Airbyte en formato JSON
+
+      - name: repositories
+        description: >
+          Repositorios de GitHub de la organización AirbyteHQ, extraídos
+          via Airbyte. Contiene metadatos de cada repositorio como URLs,
+          estado de archivado y fechas de actualización.
+        columns:
+          - name: id
+            description: ID numérico único del repositorio en GitHub
+          - name: archived
+            description: Indica si el repositorio está archivado (true/false)
+          - name: clone_url
+            description: URL para clonar el repositorio via HTTPS
+          - name: updated_at
+            description: Fecha y hora de la última actualización del repositorio
+          - name: archive_url
+            description: URL de la API para descargar el archivo del repositorio
+          - name: commits_url
+            description: URL de la API para acceder a los commits
+          - name: comments_url
+            description: URL de la API para acceder a los comentarios
+          - name: collaborators_url
+            description: URL de la API para acceder a los colaboradores
+          - name: _airbyte_raw_id
+            description: ID interno de trazabilidad de Airbyte
+          - name: _airbyte_extracted_at
+            description: Timestamp de cuando Airbyte extrajo el registro
+          - name: _airbyte_meta
+            description: Metadatos internos de Airbyte en formato JSON
